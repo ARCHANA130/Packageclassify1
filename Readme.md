@@ -84,7 +84,7 @@ npm start
   - Calculate points based on detected damage.
   - Display results, points, and the detected masked image in a popup.
 
----
+<!-- ---
 
 ## Usage Steps
 
@@ -118,7 +118,7 @@ npm start
 
 - Displays the detected masked image.
 
-> **Tip:** Save screenshots of your UI in `frontend/public/` and update the image links above.
+> **Tip:** Save screenshots of your UI in `frontend/public/` and update the image links above. -->
 
 ---
 
