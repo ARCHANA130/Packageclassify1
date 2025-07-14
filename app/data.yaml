@@ -1,0 +1,13 @@
+train: /content/wrapper-segmentation-22/train/images
+val: /content/wrapper-segmentation-22/valid/images
+test: 
+
+nc: 8
+names: ['box', 'burnt', 'paper', 'plastic', 'shrink', 'stain', 'torn', 'wet']
+
+roboflow:
+  workspace: wrapper-wkv0r
+  project: wrapper-segmentation
+  version: 22
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/wrapper-wkv0r/wrapper-segmentation/dataset/22

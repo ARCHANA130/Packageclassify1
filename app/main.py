@@ -5,7 +5,9 @@ from PIL import Image
 import numpy as np
 import tensorflow as tf
 import io
-
+from ultralytics import YOLO
+import torch
+import glob
 app = FastAPI()
 
 # Allow frontend to access API
@@ -16,10 +18,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+from fastapi.staticfiles import StaticFiles
+app.mount("/runs", StaticFiles(directory="runs"), name="runs")
 # Load model
 model = tf.keras.models.load_model("model.h5")
 class_names = ["Box", "Paper", "Plastic"]
+
+# Load YOLO model once at startup
+yolo_model = YOLO("best.pt")
+yolo_wrapper_classes = ['plastic', 'paper', 'box']
+yolo_defect_classes = ['stain', 'torn', 'wet', 'shrink']
 
 @app.get("/")
 async def root():
@@ -106,3 +114,63 @@ def calculate_total_points(material, damage_data):
 async def calculate_points(request: PointsRequest):
     result = calculate_total_points(request.material, request.damage_data)
     return result
+
+@app.post("/detect_defects")
+async def detect_defects(file: UploadFile = File(...)):
+    contents = await file.read()
+    # Save to a temporary file or use BytesIO
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_img:
+        temp_img.write(contents)
+        temp_img_path = temp_img.name
+
+    try:
+        results = yolo_model.predict(
+            source=temp_img_path,
+            conf=0.05,
+            save=True
+        )
+        r = results[0]
+        class_pixel_counts = {}
+        if hasattr(results[0], 'save_dir'):
+    # Find the saved image in the directory
+       
+            files = glob.glob(str(results[0].save_dir) + "/*.jpg")
+            if files:
+                saved_img_path = files[0].replace("\\", "/") 
+
+        if r.masks is not None:
+            mask_array = r.masks.data.cpu().numpy()
+            classes = r.boxes.cls.cpu().numpy().astype(int)
+            for idx, cls_idx in enumerate(classes):
+                class_name = yolo_model.names[cls_idx]
+                mask_pixels = mask_array[idx].sum()
+                if class_name not in class_pixel_counts:
+                    class_pixel_counts[class_name] = 0
+                class_pixel_counts[class_name] += mask_pixels
+
+        wrapper_area = sum(
+            class_pixel_counts.get(cls, 0) for cls in yolo_wrapper_classes
+        )
+        percentages = {}
+        for defect in yolo_defect_classes:
+            defect_area = class_pixel_counts.get(defect, 0)
+            pct = (defect_area / wrapper_area * 100) if wrapper_area > 0 else 0.0
+            percentages[defect] = pct
+
+        # Convert all numpy types to Python native types for JSON serialization
+        percentages_py = {k: float(v) for k, v in percentages.items()}
+        class_pixel_counts_py = {k: int(v) for k, v in class_pixel_counts.items()}
+        wrapper_area_py = int(wrapper_area)
+
+        return {
+            "wrapper_area": wrapper_area_py,
+            "defect_percentages": percentages_py,
+            "pixel_counts": class_pixel_counts_py,
+            "masked_image_path": saved_img_path.replace("C:/Users/Archana/Desktop/ProjectPackage/app/", "") if saved_img_path else None
+            
+        }
+    finally:
+        os.remove(temp_img_path)
