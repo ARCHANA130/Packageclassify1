@@ -95,6 +95,33 @@ npm start
 
 ---
 
+## Frontend Display
+
+### Main UI
+
+![Main UI](frontend/public/main.jpg)
+
+- Upload section for package image.
+- Button to classify and calculate points.
+
+### Results Section
+
+![Results Section](frontend/public/points.png)
+- Confetti animation for earned points.
+- Button to view detected masked image in a popup.
+- Shows predicted material and points.
+- Displays the detected masked image.
+
+### Popup Example
+
+![Popup Example](frontend/public/screenshot_popup.png)
+
+- Displays the detected masked image.
+
+> **Tip:** Save screenshots of your UI in `frontend/public/` and update the image links above.
+
+---
+
 ## Troubleshooting
 
 - If you get a 404 for images, ensure the backend is serving the `runs` directory and the image path is correct.
