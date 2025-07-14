@@ -99,14 +99,14 @@ npm start
 
 ### Main UI
 
-![Main UI](frontend/public/main.jpg)
+![Main UI](frontend/public/main.jpeg)
 
 - Upload section for package image.
 - Button to classify and calculate points.
 
 ### Results Section
 
-![Results Section](frontend/public/points.png)
+![Results Section](frontend/public/points.jpeg)
 - Confetti animation for earned points.
 - Button to view detected masked image in a popup.
 - Shows predicted material and points.
